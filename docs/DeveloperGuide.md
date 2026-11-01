@@ -4,6 +4,9 @@
 
 - [Acknowledgements](#acknowledgements)
 - [Architecture overview](#architecture-overview)
+- [Shared command processing](#shared-command-processing)
+  - [Parsing and routing](#parsing-and-routing)
+  - [Validation and error handling](#validation-and-error-handling)
 - [Design & implementation](#design--implementation)
   - [Creating projects, tasks and events](#creating-projects-tasks-and-events-projectadd-taskadd-and-eventadd)
   - [Viewing project details](#viewing-project-details-projectview)
@@ -47,6 +50,50 @@ trashcan. `BusyNotFree` supplies those managers and one `Ui` to `CommandHandler`
 which creates its specialised handlers. A save callback captures the same managers
 for both `save` and `exit`; commands and persistence therefore use the same session data.
 The properties file is `data/busynotfree.properties` relative to the working directory.
+
+## Shared command processing
+
+This section describes the flow shared by the feature handlers. The implementation
+sections below explain each command's additional validation and model changes.
+
+### Parsing and routing
+
+1. `BusyNotFree#run` reads one line. If a deletion confirmation is pending,
+   `CommandHandler` treats the line as a confirmation answer before normal routing.
+2. Otherwise, the application handles standalone `save` itself. It sends other input
+   to `CommandHandler#execute`, which recognises `exit` and `help` before parsing
+   dotted commands such as `project.view`.
+3. `CommandParser` separates a dotted command into its target, action and argument
+   text, held in a `ParsedCommand`. It checks the command-word structure;
+   `CommandHandler#routeCommand` and the specialised handlers check supported actions.
+4. Handlers validate positional IDs and use `ArgumentParser` for prefixed fields.
+   Each required prefix must occur once with a non-blank value; field order is free.
+   A recognised prefix that is not allowed for the command is rejected. Unrecognised
+   slash-containing text within a value remains part of that value. Dates must match
+   `YYYY-MM-DD` exactly and represent a real calendar date.
+5. Managers and domain objects check model relationships and invariants before a
+   successful change is committed. The handler passes the result to `Ui` or `ClientUi`.
+
+`CommandHandler#execute` returns a boolean to the application loop: `true` requests
+saving and exit, while `false` continues the session. This internal control value
+is omitted from the feature sequence diagrams; the human user receives console output.
+The [saving section](#saving-during-a-session-or-on-exit) explains the callback and retry behaviour.
+
+### Validation and error handling
+
+| Failure | Handling boundary | Result |
+| --- | --- | --- |
+| Malformed command, positional arguments, prefixes or dates | A parser or handler throws `CommandException`; `CommandHandler#execute` catches it. | Display the error and a usage hint when one is available, then continue reading input. |
+| Missing record or invalid model data | The model throws a subclass of `BusyNotFreeException`; `CommandHandler#execute` catches it. | Display the error and the supported command's usage hint. Rejected input leaves existing data and ID counters unchanged. |
+| Client deletion blocked by associated projects | `CommandHandler#execute` catches `ClientHasProjectsException` separately. | Display the relationship error without an additional usage hint. |
+| Failed write during `save` or `exit` | `BusyNotFree#saveData` catches `IOException`. | Report the failure and retain the session so an explicit save/exit can be retried. At end of input, report the failure and return. |
+| Invalid or unreadable file at startup | `DataStorage#load` reports `IOException`; `BusyNotFree#main` catches it. | Display a load error and stop before accepting commands or overwriting the file. |
+
+If parsing fails before a `ParsedCommand` is available, the shared handler displays
+the error without trying to infer a command-specific usage hint. Deletion confirmations
+have their own yes/no validation; finish or cancel confirmation before another command.
+Assertions check internal assumptions during development. Unexpected programming
+exceptions and assertion failures are not swallowed by the command-error handler.
 
 ## Design & implementation
 
@@ -154,8 +201,8 @@ Each layer throws its own subclass of the unchecked `BusyNotFreeException`: `Com
 ### Viewing project details: `project.view`
 
 `project.view P001` displays one project's client, status, deadline, tasks, progress and events.
-The sequence diagram follows a successful lookup; parsing of the command word and separator
-output are omitted.
+The sequence diagram follows a successful lookup. The [shared parsing and routing](#parsing-and-routing)
+steps and separator output are omitted.
 
 ![Sequence diagram of project.view P001](images/ProjectViewSequenceDiagram.png)
 
@@ -262,8 +309,8 @@ The sequence diagram shows `task.mark T001`. `task.unmark` follows the same path
 
 ![Sequence diagram of task.mark T001](images/TaskCompletionSequenceDiagram.png)
 
-`CommandHandler#execute` catches command and model exceptions, prints the error and the
-command's usage, then accepts another command. It does not catch unrelated programming errors.
+Rejected mark/unmark commands follow the [shared error-handling flow](#validation-and-error-handling).
+The error and task-command format are displayed before another command is accepted.
 
 #### Calculating project progress
 
@@ -812,6 +859,7 @@ easy to reference from later commands.
 |Version| As a ... | I want to ... | So that I can ...|
 |--------|----------|---------------|------------------|
 |v1.0|new user|see usage instructions|refer to them when I forget how to use the application|
+|v1.0|freelancer|register clients and keep notes about them|retain client details alongside their projects|
 |v1.0|freelancer|create a project for an existing client with a deadline|organise and plan the client's work|
 |v1.0|freelancer|add a dated internal task to a project|track the work that needs to be completed|
 |v1.0|freelancer|add a scheduled event to a project|keep track of meetings, reviews and presentations|
@@ -821,7 +869,13 @@ easy to reference from later commands.
 |v2.0|freelancer|see a completed-task count for each project|assess progress at a glance|
 |v2.0|freelancer|retain task completion after restarting|avoid marking the same tasks again|
 |v2.0|freelancer|save my work without exiting|protect recent changes during a long session|
-|v2.0|user|find a to-do item by name|locate a to-do without having to go through the entire list|
+|v2.0|freelancer|find clients by part of their name|locate a client without reading the entire client list|
+|v2.0|freelancer|edit a client's name while keeping their ID and notes|update client details without breaking project links|
+|v2.0|freelancer|change project statuses and filter projects by status|focus on work in the relevant stage|
+|v2.0|freelancer|list projects by deadline and identify overdue active projects|prioritise time-sensitive work|
+|v2.0|freelancer|confirm or cancel deletion of unwanted records|remove data deliberately while preserving unrelated work|
+|v2.0|freelancer|restore a deleted client and their deleted projects with the original details|recover from accidental deletion|
+|v2.0|freelancer|permanently empty the trashcan after confirmation|remove retained records I no longer need|
 |v2.0|freelancer responding to changes in client requirements|edit an existing task's description and date without changing its ID or project|keep the work plan accurate|
 |v2.0|freelance consultant arranging client meetings|edit an existing event's description and date without changing its ID or project|update a rescheduled meeting without deleting and recreating it|
 
@@ -841,8 +895,10 @@ easy to reference from later commands.
 
 * *Client* - A person or organisation whose work is being managed.
 * *Project* - A body of work belonging to one client.
-* *Task* - A dated piece of work attached to a project.
-* *Event* - A dated meeting or appointment attached to a project.
+* *Task* - A dated piece of internal work attached to a project. It can be marked complete
+  or reopened, and it contributes to the project's completed-task count.
+* *Event* - A dated meeting, review or appointment attached to a project. It has no task
+  completion flag and is excluded from the project's progress count.
 * *Trashcan* - Persistent storage for deleted projects and clients that may be
   restored where supported.
 * *Prefix* - The name before `/` in an argument, such as `name/` or `date/`.

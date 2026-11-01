@@ -33,7 +33,7 @@ and progress, and saving data between sessions.
   [PR #82](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/82).
 
 - **Testing:** Added JUnit tests for project summaries, completion changes, save/load round
-  trips, older-file compatibility and failed saves. Submitted ten additional regression tests
+  trips, older-file compatibility and failed saves. Added ten additional regression tests
   covering project isolation, malformed storage and application restarts in
   [PR #92](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/92).
 
@@ -48,4 +48,10 @@ and progress, and saving data between sessions.
   and [task completion, progress and persistence](../DeveloperGuide.md#task-completion-project-progress-and-persistence),
   including the design choices and verification. Added the project-view, task-marking,
   save-command and task-restoration sequence diagrams and the task-completion class diagram.
-  Evidence: [PR #83](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/83).
+  Evidence: [PR #83](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/83) and
+  [DG revisions in PR #93](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/93).
+  For v2.1, removed internal boolean returns to the human actor from the project-view
+  and task-completion diagrams following peer feedback. Added the shared
+  [architecture overview](../DeveloperGuide.md#architecture-overview),
+  [command-processing explanation](../DeveloperGuide.md#shared-command-processing)
+  and linked contents, and clarified the [Task/Event glossary](../DeveloperGuide.md#glossary).

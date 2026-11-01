@@ -30,7 +30,6 @@ P --> UI : events
 note right of UI : Prints the client, task list,\nprogress count and event list.
 UI --> CH
 deactivate UI
-CH --> User : false (continue command loop)
 deactivate CH
 
 @enduml

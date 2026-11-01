@@ -1,0 +1,24 @@
+@startuml
+' Selected dependencies between the existing classes, grouped by responsibility.
+skinparam componentStyle uml2
+skinparam shadowing false
+
+component "BusyNotFree\nApplication loop" as App
+component "CommandHandler\nSpecialised handlers" as Commands
+component "CommandParser\nArgumentParser" as Parsers
+component "Ui\nClientUi" as UI
+component "Managers and records\nbusynotfree.model" as Model
+component "DataStorage" as Storage
+artifact "data/busynotfree.properties" as File
+
+App ..> Commands : dispatches input
+App ..> UI : displays prompts\nand errors
+App ..> Storage : loads / saves
+Commands ..> Parsers : parses input
+Commands ..> Model : queries / updates
+Commands ..> UI : presents results
+UI ..> Model : reads records
+Storage ..> Model : serialises / reconstructs
+Storage ..> File : reads / writes UTF-8
+
+@enduml

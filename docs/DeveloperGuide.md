@@ -1,10 +1,52 @@
 # Developer Guide
 
+## Contents
+
+- [Acknowledgements](#acknowledgements)
+- [Architecture overview](#architecture-overview)
+- [Design & implementation](#design--implementation)
+  - [Creating projects, tasks and events](#creating-projects-tasks-and-events-projectadd-taskadd-and-eventadd)
+  - [Viewing project details](#viewing-project-details-projectview)
+  - [Project tracking and status views](#project-tracking-and-status-views-projectlist-projectstatus-projectfilter-projectdeadlines-and-projectoverdue)
+  - [Task completion, project progress and persistence](#task-completion-project-progress-and-persistence)
+  - [Editing tasks and events](#editing-tasks-and-events-taskedit-and-eventedit)
+  - [Managing clients](#managing-clients-clientadd-clientnote-clientview-and-clientlist)
+  - [Safe deletion and project recovery](#safe-deletion-and-project-recovery)
+  - [Command discovery and internal consistency checks](#command-discovery-and-internal-consistency-checks)
+- [Product scope](#product-scope)
+- [User stories](#user-stories)
+- [Non-functional requirements](#non-functional-requirements)
+- [Glossary](#glossary)
+- [Instructions for manual testing](#instructions-for-manual-testing)
+
 ## Acknowledgements
 
 * Documentation structure follows the [AddressBook-Level3 User Guide](https://se-education.org/addressbook-level3/UserGuide.html), [Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html) and [PPP example](https://se-education.org/addressbook-level3/team/johndoe.html), as recommended by the [CS2113 deliverables guidance](https://nus-cs2113-ay2627-s1.github.io/website/admin/tp-deliverables.html).
 * UML notation follows the course's [Modeling (Using UML) chapter](https://nus-cs2113-ay2627-s1.github.io/website/se-book-adapted/chapters/modeling.html).
 * Diagrams are authored and rendered with [PlantUML](https://plantuml.com/).
+
+## Architecture overview
+
+BusyNotFree is a single-process Java command-line application. The component diagram
+groups the existing classes by responsibility; dashed arrows show which group uses
+another. It omits individual model relationships, which are shown in the feature diagrams.
+
+![Component diagram of the application, commands, parsers, model, UI and storage](images/ArchitectureDiagram.png)
+
+| Responsibility | Main classes | Role |
+| --- | --- | --- |
+| Application | `BusyNotFree` | Loads saved data, reads terminal input, coordinates saves and decides when the session ends. |
+| Commands | `CommandHandler`, `ClientCommandHandler`, `TrashcanCommandHandler` | Route commands, validate command-specific arguments and request model operations. |
+| Parsing | `CommandParser`, `ArgumentParser` | Separate command words and arguments, and validate prefixed values and dates. |
+| Model | `ClientManager`, `ProjectManager`, `TrashcanManager` and their records | Maintain active/deleted data, relationships, completion states and ID counters. |
+| User interface | `Ui`, `ClientUi` | Format prompts, confirmations, results and errors using the supplied model records. |
+| Storage | `DataStorage` | Convert managers to and from the UTF-8 properties file, including trashcan records and ID counters. |
+
+At startup, `DataStorage#load` returns client and project managers that share one
+trashcan. `BusyNotFree` supplies those managers and one `Ui` to `CommandHandler`,
+which creates its specialised handlers. A save callback captures the same managers
+for both `save` and `exit`; commands and persistence therefore use the same session data.
+The properties file is `data/busynotfree.properties` relative to the working directory.
 
 ## Design & implementation
 

@@ -1,0 +1,66 @@
+@startuml
+' Object diagram: the model after these commands, in order:
+'   client.add name/Acme Studio
+'   project.add client/C001 name/Website redesign due/2026-11-30
+'   task.add project/P001 name/Create wireframe date/2026-10-15
+'   task.add project/P999 name/Draft copy date/2026-10-18      (rejected: P999 does not exist)
+'   task.add project/P001 name/Build homepage date/2026-10-25
+'   event.add project/P001 name/Stakeholder meeting date/2026-10-20
+' Object names are underlined, as the course notation requires.
+' The trashcan and other fields unrelated to creation are omitted.
+!pragma layout smetana
+hide circle
+hide empty members
+skinparam nodesep 50
+skinparam ranksep 60
+
+object "<u>:ProjectManager</u>" as pm {
+  nextProjectNumber = 2
+  nextTaskNumber = 3
+  nextEventNumber = 2
+}
+
+object "<u>:ClientManager</u>" as cm {
+  nextClientNumber = 2
+}
+
+object "<u>c1:Client</u>" as c1 {
+  clientId = "C001"
+  name = "Acme Studio"
+}
+
+object "<u>p1:Project</u>" as p1 {
+  projectId = "P001"
+  clientId = "C001"
+  name = "Website redesign"
+  deadline = 2026-11-30
+  status = ACTIVE
+}
+
+object "<u>t1:Task</u>" as t1 {
+  id = "T001"
+  description = "Create wireframe"
+  date = 2026-10-15
+  completed = false
+}
+
+object "<u>t2:Task</u>" as t2 {
+  id = "T002"
+  description = "Build homepage"
+  date = 2026-10-25
+  completed = false
+}
+
+object "<u>e1:Event</u>" as e1 {
+  id = "E001"
+  description = "Stakeholder meeting"
+  date = 2026-10-20
+}
+
+pm -right- cm : "clientLookup"
+cm -down- c1
+pm -down- p1
+p1 -down- t1
+p1 -down- t2
+p1 -down- e1
+@enduml

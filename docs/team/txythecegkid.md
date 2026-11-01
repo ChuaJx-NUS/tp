@@ -53,8 +53,13 @@ the shared command-argument parsing and validation they rely on, and the matchin
   [Creating projects, tasks and events](../DeveloperGuide.md#creating-projects-tasks-and-events-projectadd-taskadd-and-eventadd)
   and [Editing tasks and events](../DeveloperGuide.md#editing-tasks-and-events-taskedit-and-eventedit), covering the
   model, parsing, error handling and design alternatives. Added the user stories for these features.
-  - UML diagrams added: the model class diagram (`CreationModelClassDiagram`) and the `project.add` and `task.add`
-    sequence diagrams (`AddProjectSequenceDiagram`, `AddTaskSequenceDiagram`).
+  - UML diagrams added: the model class diagram (`CreationModelClassDiagram`), an object diagram of the model after a
+    sample session (`CreationObjectDiagram`), and the `project.add` and `task.add` sequence diagrams
+    (`AddProjectSequenceDiagram`, `AddTaskSequenceDiagram`).
+  - Revised these diagrams after the DG peer review: removed return arrows to the user, showed the client lookup
+    after project creation, and redrew the class diagram so that no lines cross. Evidence:
+    [PR #97](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/97),
+    [PR #101](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/101).
 
 - **Contributions to team-based tasks:**
   - Helped set up the issue tracker: created v1.0 epics and user stories for teammates' features as well as my own
@@ -70,4 +75,10 @@ the shared command-argument parsing and validation they rely on, and the matchin
   [#82](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/82), [#83](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/83),
   [#89](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/89) and [#92](https://github.com/AY2627S1-CS2113-T10-3/tp/pull/92).
 
-[//]: # (- **Contributions beyond the project team:** TODO: Add forum posts, technical sharing or bugs reported in other teams' products, with links.)
+- **Contributions beyond the project team:** Reviewed the Developer Guide of team CS2113-W12-4, with comments on
+  their diagrams and explanations
+  ([1](https://github.com/NUS-CS2113-AY2627-S1/tp/pull/9#discussion_r4408059242),
+  [2](https://github.com/NUS-CS2113-AY2627-S1/tp/pull/9#discussion_r4408067956),
+  [3](https://github.com/NUS-CS2113-AY2627-S1/tp/pull/9#discussion_r4408073988),
+  [4](https://github.com/NUS-CS2113-AY2627-S1/tp/pull/9#discussion_r4408096727),
+  [5](https://github.com/NUS-CS2113-AY2627-S1/tp/pull/9#discussion_r4408114337)).
